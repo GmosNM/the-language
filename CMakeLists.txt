@@ -19,6 +19,8 @@ set (SRC
     src/astGen.cpp
     src/astGen.hpp
     src/type_checker.hpp
+    src/XIR.hpp
+    src/XIR.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRC})
