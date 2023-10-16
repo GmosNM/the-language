@@ -1,0 +1,21 @@
+
+/bin
+/bld
+
+
+# ignore editor files
+.idea
+.project
+.classpath
+.c9
+.vs
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/
+*.code-workspace
+*~
+*.swp
+*.swo
+*.swn
+.env
