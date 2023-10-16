@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include "XIR.hpp"
-#include "Parser.hpp"
+#include "parser.hpp"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
