@@ -7,23 +7,85 @@
 #include "astGen.hpp"
 // clang-format on
 
-class Parser {
-public:
-    Parser(Lexer &l) : lexer(l), index(0), globalSymbolTable(nullptr) {
-        globalSymbolTable = new SymbolTable(nullptr);
+struct SymbolTable {
+    std::unordered_map<std::string, VariableDeclaration *> variables;
+    std::unordered_map<std::string, FunctionDeclaration *> functions;
+
+    SymbolTable *parentScope;
+
+    void AddVariable(const std::string &name, VariableDeclaration *variable) {
+        variables[name] = variable;
     }
-    Parser(const Parser &) = delete;
 
-    ~Parser() {}
+    void AddFunction(const std::string &name, FunctionDeclaration *function) {
+        functions[name] = function;
+    }
 
-    void parse();
+    VariableDeclaration *GetVariable(const std::string &name) {
+        if (variables.count(name) > 0) {
+            return variables[name];
+        } else if (parentScope) {
+            return parentScope->GetVariable(name);
+        }
+        return nullptr;
+    }
 
-    void printAST() { ast.printAST(); }
+    VariableReference *GetVariableRef(const std::string &name) {
+        if (variables.count(name) > 0) {
+            return new VariableReference(name,
+                                         variables[name]->initialization_value,
+                                         variables[name]->variable_type);
+        } else if (parentScope) {
+            return parentScope->GetVariableRef(name);
+        }
+        return nullptr;
+    }
+
+    FunctionDeclaration *GetFunction(const std::string &name) {
+        if (functions.count(name) > 0) {
+            return functions[name];
+        } else if (parentScope) {
+            return parentScope->GetFunction(name);
+        }
+        return nullptr;
+    }
+
+    bool hasFunction(const std::string &name) {
+        for (auto &func : functions) {
+            if (func.first == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool hasVariable(const std::string &name) {
+        for (auto &var : variables) {
+            if (var.first == name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void setNewVariableValue(const std::string &name,
+                             const std::string &newValue) {
+        if (hasVariable(name)) {
+            VariableDeclaration *variable = GetVariable(name);
+            variable->initialization_value->literal_value = newValue;
+        }
+    }
+
+    SymbolTable(SymbolTable *parent = nullptr) : parentScope(parent) {}
+
+    ~SymbolTable() {}
+};
+
+class Parser {
 
 private:
     Lexer &lexer;
     size_t index;
-    ASTGen ast;
 
     void expect(TokenType type);
     Token getCurrentToken();
@@ -49,72 +111,7 @@ private:
     Expression *parseFactor();
     VariableAssignment *parseVariableAssignment();
 
-
     // SymbolTable
-    struct SymbolTable {
-        std::unordered_map<std::string, VariableDeclaration *> variables;
-        std::unordered_map<std::string, FunctionDeclaration *> functions;
-
-        SymbolTable *parentScope;
-
-        void AddVariable(const std::string &name,
-                         VariableDeclaration *variable) {
-            variables[name] = variable;
-        }
-
-        void AddFunction(const std::string &name,
-                         FunctionDeclaration *function) {
-            functions[name] = function;
-        }
-
-        VariableDeclaration *GetVariable(const std::string &name) {
-            if (variables.count(name) > 0) {
-                return variables[name];
-            } else if (parentScope) {
-                return parentScope->GetVariable(name);
-            }
-            return nullptr;
-        }
-
-        FunctionDeclaration *GetFunction(const std::string &name) {
-            if (functions.count(name) > 0) {
-                return functions[name];
-            } else if (parentScope) {
-                return parentScope->GetFunction(name);
-            }
-            return nullptr;
-        }
-
-        bool hasFunction(const std::string &name) {
-            for (auto &func : functions) {
-                if (func.first == name) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        bool hasVariable(const std::string &name) {
-            for (auto &var : variables) {
-                if (var.first == name) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        void setNewVariableValue(const std::string &name,
-                                 const std::string &newValue) {
-            if (hasVariable(name)) {
-                VariableDeclaration *variable = GetVariable(name);
-                variable->initialization_value->literal_value = newValue;
-            }
-        }
-
-        SymbolTable(SymbolTable *parent = nullptr) : parentScope(parent) {}
-
-        ~SymbolTable() {}
-    };
 
     void enterScope() {
         SymbolTable *newScope = new SymbolTable(globalSymbolTable);
@@ -135,8 +132,22 @@ private:
 
     void print_cuurent_scope() {}
 
-    SymbolTable *globalSymbolTable;
     std::vector<SymbolTable *> scopeStack;
+
+public:
+    SymbolTable *globalSymbolTable;
+    Parser(Lexer &l) : lexer(l), index(0), globalSymbolTable(nullptr) {
+        globalSymbolTable = new SymbolTable(nullptr);
+    }
+    Parser(const Parser &) = delete;
+
+    ~Parser() {}
+
+    void parse();
+
+    void printAST() { ast.printAST(); }
+
+    ASTGen ast;
 };
 
 #endif /* PARSER_HPP_ */

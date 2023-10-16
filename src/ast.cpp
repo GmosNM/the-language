@@ -40,6 +40,23 @@ std::string dataTypeToString(DataType type) {
     }
 }
 
+std::string dataTypeToCType(DataType type) {
+    switch (type.category) {
+    case DataType::Category::INT:
+        return "int";
+    case DataType::Category::FLOAT:
+        return "float";
+    case DataType::Category::BOOL:
+        return "bool";
+    case DataType::Category::CHAR:
+        return "char";
+    case DataType::Category::STRING:
+        return "char*";
+    default:
+        return "Unknown";
+    }
+}
+
 std::string operationToString(Operation op) {
     switch (op) {
     case Operation::ADD:

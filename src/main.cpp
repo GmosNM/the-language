@@ -1,6 +1,7 @@
-#include "parser.hpp"
 #include <iostream>
 #include <string>
+#include "XIR.hpp"
+#include "Parser.hpp"
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -11,5 +12,10 @@ int main(int argc, char *argv[]) {
     Parser parser(lexer);
     parser.parse();
 
+    IR ir(argv[1], "output.c", parser.ast, parser);
+    ir.GenIR();
+
+
     return 0;
 }
+

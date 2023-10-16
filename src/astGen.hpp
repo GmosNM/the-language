@@ -107,16 +107,51 @@ public:
                     break;
 
                 case Expression::Type::VARIABLE_REFERENCE:
-                    std::cout << "\t\tReturned value (VARIABLE_REFERENCE): "
-                              << rs->returned_value->variable_name << std::endl;
-                    std::cout
-                        << "\t\t\tType: "
-                        << dataTypeToString(rs->returned_value->variable_type)
-                        << std::endl;
-                    std::cout
-                        << "\t\t\tValue: " << rs->returned_value->literal_value
-                        << std::endl;
-                    break;
+                    if (!rs->returned_value->variable_reference
+                             ->initialization_value->function_name.empty()) {
+                        std::cout
+                            << "\t\tReturned value (VARIABLE_REFERENCE => "
+                               "FunctionCall): "
+                            << rs->returned_value->variable_reference->name
+                            << std::endl;
+                        std::cout
+                            << "\t\t\tType: "
+                            << dataTypeToString(
+                                   rs->returned_value->variable_reference
+                                       ->initialization_value->variable_type)
+                            << std::endl;
+                        std::cout << "\t\t\tValue: "
+                                  << rs->returned_value->variable_reference
+                                         ->initialization_value->function_name
+                                  << std::endl;
+                        for (const auto &arg :
+                             rs->returned_value->variable_reference
+                                 ->initialization_value->arguments) {
+                            std::cout
+                                << "\t\t\t\tArgument: \n\t\t\t\tname: \""
+                                << arg->variable_name
+                                << "\" \n\t\t\t\tValue: " << arg->literal_value
+                                << std::endl;
+                        }
+                        std::cout
+                            << "\t\tReturned value (VARIABLE_REFERENCE): "
+                            << rs->returned_value->variable_reference->name
+                            << std::endl;
+                        break;
+                    } else {
+                        std::cout << "\t\tReturned value (VARIABLE_REFERENCE): "
+                                  << rs->returned_value->variable_name
+                                  << std::endl;
+                        std::cout
+                            << "\t\t\tType: "
+                            << dataTypeToString(
+                                   rs->returned_value->variable_type.category)
+                            << std::endl;
+                        std::cout << "\t\t\tValue: "
+                                  << rs->returned_value->literal_value
+                                  << std::endl;
+                        break;
+                    }
 
                 case Expression::Type::VARIABLE_ASSIGNMENT:
                     std::cout << "\t\tReturned value (VARIABLE_ASSIGNMENT): "
@@ -125,9 +160,15 @@ public:
                         << "\t\t\tType: "
                         << dataTypeToString(rs->returned_value->variable_type)
                         << std::endl;
-                    std::cout
-                        << "\t\t\tValue: " << rs->returned_value->literal_value
-                        << std::endl;
+                    if (rs->returned_value->function_name.empty()) {
+                        std::cout << "\t\t\tValue: "
+                                  << rs->returned_value->literal_value
+                                  << std::endl;
+                    } else {
+                        std::cout << "\t\t\tFunction Name: "
+                                  << rs->returned_value->function_name
+                                  << std::endl;
+                    }
                     break;
 
                 default:
@@ -182,7 +223,6 @@ public:
         }
     }
 
-private:
     std::vector<Instruction *> nodes;
     Instruction *currentNode;
 };

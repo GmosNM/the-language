@@ -247,7 +247,8 @@ VariableReference* Parser::parseVariableReference() {
     std::string name = getCurrentToken().value;
     if (globalSymbolTable->parentScope->hasVariable(name)) {
         auto var = globalSymbolTable->parentScope->GetVariable(name);
-        return new VariableReference(name, var->initialization_value->literal_value,globalSymbolTable->parentScope->GetVariable(name)->variable_type);
+        return new VariableReference(name, var->initialization_value,
+                globalSymbolTable->parentScope->GetVariable(name)->variable_type);
     }
     return nullptr;
 }
@@ -274,8 +275,8 @@ Expression* Parser::parseExpression() {
         consume(RPAREN);
 
         DataType returnType = determineFunctionReturnType(funcName, args);
-
-        expression = new FunctionCall(funcName, args, returnType);
+        Expression * funcCall = new Expression(funcName, args, returnType);
+        expression = funcCall;
     }
 
     while (isOperator(getCurrentToken().type)) {
@@ -337,6 +338,7 @@ Expression* Parser::parseFactor() {
             DataType variableType = globalSymbolTable->parentScope->GetVariable(variableName)->variable_type;
             std::string variableValue = globalSymbolTable->GetVariable(variableName)->initialization_value->literal_value;
             primary = new Expression(variableName, parseVariableReference(), variableType, variableValue);
+            primary->variable_reference = globalSymbolTable->parentScope->GetVariableRef(variableName);
         } else {
             std::cerr << "Variable '" << variableName << "' is undefined." << std::endl;
         }

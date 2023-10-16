@@ -32,6 +32,7 @@ enum class NodeType {
 std::string nodeTypeToString(NodeType type);
 std::string dataTypeToString(DataType type);
 std::string operationToString(Operation op);
+std::string dataTypeToCType(DataType type);
 
 struct Instruction {
 public:
@@ -116,11 +117,11 @@ struct VariableDeclaration : public Instruction {
 struct VariableReference : public Instruction {
     std::string name;
     DataType variable_type;
-    std::string value;
+    Expression *initialization_value;
 
-    VariableReference(const std::string &n, std::string value, DataType type)
+    VariableReference(const std::string &n, Expression *value, DataType type)
         : Instruction(NodeType::VARIABLE_REFERENCE), name(n),
-          variable_type(type), value(value) {}
+          variable_type(type), initialization_value(value) {}
 };
 
 struct FunctionDeclaration : public Instruction {
