@@ -12,7 +12,7 @@ struct DataType {
     DataType(Category c) : category(c) {}
 };
 
-enum class Operation { ADD, SUBTRACT, MULTIPLY, DIVIDE };
+enum class Operation { ADD, SUBTRACT, MULTIPLY, DIVIDE, EQUAL };
 
 enum class NodeType {
     // Variables
@@ -26,7 +26,9 @@ enum class NodeType {
     // Statements
     RETURN_STATEMENT,
     // expressions
-    EXPRESSION
+    EXPRESSION,
+    IF,
+    ELSE
 };
 
 std::string nodeTypeToString(NodeType type);
@@ -53,7 +55,8 @@ struct Expression : public Instruction {
         BINARY_OPERATION,
         FUNCTION_CALL,
         VARIABLE_REFERENCE,
-        VARIABLE_ASSIGNMENT
+        VARIABLE_ASSIGNMENT,
+        EQUAL_OPERATION
     };
 
     Type type;
@@ -92,6 +95,11 @@ struct Expression : public Instruction {
         : Instruction(NodeType::EXPRESSION), type(Type::VARIABLE_ASSIGNMENT),
           variable_name(var_name), literal_value(new_value),
           variable_type(type) {}
+
+    // Equal operation
+    Expression(Expression *left, Expression *right)
+        : Instruction(NodeType::EXPRESSION), type(Type::EQUAL_OPERATION),
+          left_operand(left), right_operand(right) {}
 
     std::string literal_value;
     std::string variable_name;
@@ -187,4 +195,25 @@ struct VariableAssignment : public Instruction {
     VariableAssignment(const std::string &n, Expression *v, DataType type)
         : Instruction(NodeType::VARIABLE_ASSIGNMENT), name(n), new_value(v),
           variable_type(type) {}
+};
+
+struct IfStatement : public Instruction {
+    Expression *condition;
+    FunctionBody *ifBody;
+    FunctionBody *elseBody;
+
+    IfStatement(Expression *cond, FunctionBody *ifBody, FunctionBody *elseBody)
+        : Instruction(NodeType::IF), condition(cond), ifBody(ifBody),
+          elseBody(elseBody) {}
+
+    IfStatement(Expression *cond, FunctionBody *ifBody)
+        : Instruction(NodeType::IF), condition(cond), ifBody(ifBody) {}
+};
+
+struct ElseStatement : public Instruction {
+    FunctionBody *elseBody;
+    FunctionBody *ifBody;
+
+    ElseStatement(FunctionBody *elseBody, FunctionBody *ifBody)
+        : Instruction(NodeType::ELSE), elseBody(elseBody), ifBody(ifBody) {}
 };

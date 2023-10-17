@@ -39,6 +39,7 @@ bool Parser::isOperator(TokenType type) {
         case MINUS:
         case STAR:
         case SLASH:
+        case EQUAL:
             return true;
         default:
             return false;
@@ -56,6 +57,8 @@ Operation Parser::getOperationType(TokenType type) {
             return Operation::MULTIPLY;
         case SLASH:
             return Operation::DIVIDE;
+        case EQUAL:
+            return Operation::EQUAL;
         default:
             throw std::runtime_error("Invalid operation type");
     }
@@ -145,26 +148,7 @@ void Parser::parseFunction() {
 
     FunctionBody *body = new FunctionBody();
 
-    while (getCurrentToken().type != RBRACE) {
-        if (getCurrentToken().type == LET) {
-            auto var = parseVariableDeclaration();
-            body->addInstruction(var);
-            globalSymbolTable->parentScope->AddVariable(var->name, var);
-        } else if (getCurrentToken().type == RETURN) {
-            parseReturnStatement(body, returnType);
-        } else if (getCurrentToken().type == IDENTIFIER) {
-            if (getNextToken().type == EQUAL) {
-                auto var = parseVariableAssignment();
-                body->addInstruction(var);
-            }else{
-                auto var = parseVariableReference();
-                body->addInstruction(var);
-            }
-        } else {
-            std::cerr << "Unexpected token: " << lexer.token_to_string(getCurrentToken().type) << std::endl;
-            break;
-        }
-    }
+    body = parseBody(body);
 
     expect(RBRACE);
     consume(RBRACE);
@@ -174,6 +158,45 @@ void Parser::parseFunction() {
     ast.addNode(func);
     globalSymbolTable->AddFunction(name, func);
     exitScope();
+}
+
+
+FunctionBody* Parser::parseBody(FunctionBody* body) {
+    while (getCurrentToken().type != RBRACE) {
+        if (getCurrentToken().type == LET) {
+            auto var = parseVariableDeclaration();
+            body->addInstruction(var);
+            globalSymbolTable->parentScope->AddVariable(var->name, var);
+        } else if (getCurrentToken().type == RETURN) {
+            // TODO: Handle return type
+            parseReturnStatement(body, DataType::Category::INT);
+        } else if (getCurrentToken().type == IF) {
+            auto stats = parseIfStatement();
+            body->addInstruction(stats);
+        } else if (getCurrentToken().type == ELSE) {
+            consume(ELSE);
+            FunctionBody* elseBody = new FunctionBody();
+            expect(LBRACE);
+            consume(LBRACE);
+            elseBody = parseBody(elseBody);
+            expect(RBRACE);
+            consume(RBRACE);
+            ElseStatement* elseStatement = new ElseStatement(elseBody, body);
+            body->addInstruction(elseStatement);
+        } else if (getCurrentToken().type == IDENTIFIER) {
+            if (getNextToken().type == EQUAL) {
+                auto var = parseVariableAssignment();
+                body->addInstruction(var);
+            } else {
+                auto var = parseVariableReference();
+                body->addInstruction(var);
+            }
+        } else {
+            std::cerr << "Unexpected token: " << lexer.token_to_string(getCurrentToken().type) << std::endl;
+            break;
+        }
+    }
+    return body;
 }
 
 void Parser::parseReturnStatement(FunctionBody* body, DataType returnType) {
@@ -250,6 +273,33 @@ VariableReference* Parser::parseVariableReference() {
         return new VariableReference(name, var->initialization_value,
                 globalSymbolTable->parentScope->GetVariable(name)->variable_type);
     }
+    return nullptr;
+}
+
+
+Expression* Parser::parseCondition() {
+    if (match(LPAREN)) {
+        consume(LPAREN);
+
+        expect(IDENTIFIER);
+        std::string identifier = getCurrentToken().value;
+        VariableReference* ref = parseVariableReference();
+        consume(IDENTIFIER);
+
+        Expression* expression = new Expression(identifier, ref->variable_type, ref->name);
+
+        consume(EQUAL);
+
+
+        Expression* right = parseTerm();
+
+        expect(RPAREN);
+        consume(RPAREN);
+
+        return new Expression(Operation::EQUAL, expression, right);
+    }
+
+    throw std::runtime_error("Invalid condition");
     return nullptr;
 }
 
@@ -419,3 +469,23 @@ VariableAssignment* Parser::parseVariableAssignment() {
     }
 }
 
+
+IfStatement* Parser::parseIfStatement() {
+    expect(IF);
+    consume(IF);
+
+
+    Expression* condition = parseCondition();
+    FunctionBody *ifBody = new FunctionBody();
+    FunctionBody *elseBody = new FunctionBody();
+
+    expect(LBRACE);
+    consume(LBRACE);
+
+    ifBody = parseBody(ifBody);
+
+    expect(RBRACE);
+    consume(RBRACE);
+
+    return new IfStatement(condition, ifBody, elseBody);
+}

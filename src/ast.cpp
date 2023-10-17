@@ -18,6 +18,10 @@ std::string nodeTypeToString(NodeType type) {
         return "Expression";
     case NodeType::VARIABLE_ASSIGNMENT:
         return "VariableAssignment";
+    case NodeType::IF:
+        return "IfStatement";
+    case NodeType::ELSE:
+        return "ElseStatement";
     default:
         return "Unknown";
     }
@@ -67,6 +71,8 @@ std::string operationToString(Operation op) {
         return "*";
     case Operation::DIVIDE:
         return "/";
+    case Operation::EQUAL:
+        return "==";
     default:
         return "Unknown";
     }
