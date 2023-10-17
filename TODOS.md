@@ -2,7 +2,7 @@
 ## TODOS
 
 - [ ] support loops
-- [ ] support conditionals [if,else]
+- [X] support conditionals [if,else]
 - [ ] support print function
 
 
