@@ -110,6 +110,9 @@ private:
     Expression *parseTerm();
     Expression *parseFactor();
     VariableAssignment *parseVariableAssignment();
+    IfStatement *parseIfStatement();
+    Expression *parseCondition();
+    FunctionBody *parseBody(FunctionBody *body);
 
     // SymbolTable
 

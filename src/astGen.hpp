@@ -71,110 +71,7 @@ public:
             case NodeType::RETURN_STATEMENT: {
                 ReturnStatement *rs =
                     dynamic_cast<ReturnStatement *>(instruction);
-
-                switch (rs->returned_value->type) {
-                case Expression::Type::LITERAL:
-                    std::cout << "\t\tReturned value (LITERAL): "
-                              << rs->returned_value->literal_value << std::endl;
-                    break;
-
-                case Expression::Type::VARIABLE:
-                    std::cout << "\t\tReturned value (VARIABLE): "
-                              << rs->returned_value->variable_name << std::endl;
-                    break;
-
-                case Expression::Type::BINARY_OPERATION:
-                    std::cout << "\t\t\tLeft operand: "
-                              << rs->returned_value->left_operand->literal_value
-                              << std::endl;
-                    std::cout
-                        << "\t\t\tOperator: "
-                        << operationToString(rs->returned_value->operation)
-                        << std::endl;
-                    std::cout
-                        << "\t\t\tRight operand: "
-                        << rs->returned_value->right_operand->literal_value
-                        << std::endl;
-                    break;
-
-                case Expression::Type::FUNCTION_CALL:
-                    std::cout << "\t\tReturned value (FUNCTION_CALL): "
-                              << rs->returned_value->function_name << std::endl;
-                    for (const auto &arg : rs->returned_value->arguments) {
-                        std::cout << "\t\t\tArgument: " << arg->literal_value
-                                  << std::endl;
-                    }
-                    break;
-
-                case Expression::Type::VARIABLE_REFERENCE:
-                    if (!rs->returned_value->variable_reference
-                             ->initialization_value->function_name.empty()) {
-                        std::cout
-                            << "\t\tReturned value (VARIABLE_REFERENCE => "
-                               "FunctionCall): "
-                            << rs->returned_value->variable_reference->name
-                            << std::endl;
-                        std::cout
-                            << "\t\t\tType: "
-                            << dataTypeToString(
-                                   rs->returned_value->variable_reference
-                                       ->initialization_value->variable_type)
-                            << std::endl;
-                        std::cout << "\t\t\tValue: "
-                                  << rs->returned_value->variable_reference
-                                         ->initialization_value->function_name
-                                  << std::endl;
-                        for (const auto &arg :
-                             rs->returned_value->variable_reference
-                                 ->initialization_value->arguments) {
-                            std::cout
-                                << "\t\t\t\tArgument: \n\t\t\t\tname: \""
-                                << arg->variable_name
-                                << "\" \n\t\t\t\tValue: " << arg->literal_value
-                                << std::endl;
-                        }
-                        std::cout
-                            << "\t\tReturned value (VARIABLE_REFERENCE): "
-                            << rs->returned_value->variable_reference->name
-                            << std::endl;
-                        break;
-                    } else {
-                        std::cout << "\t\tReturned value (VARIABLE_REFERENCE): "
-                                  << rs->returned_value->variable_name
-                                  << std::endl;
-                        std::cout
-                            << "\t\t\tType: "
-                            << dataTypeToString(
-                                   rs->returned_value->variable_type.category)
-                            << std::endl;
-                        std::cout << "\t\t\tValue: "
-                                  << rs->returned_value->literal_value
-                                  << std::endl;
-                        break;
-                    }
-
-                case Expression::Type::VARIABLE_ASSIGNMENT:
-                    std::cout << "\t\tReturned value (VARIABLE_ASSIGNMENT): "
-                              << rs->returned_value->variable_name << std::endl;
-                    std::cout
-                        << "\t\t\tType: "
-                        << dataTypeToString(rs->returned_value->variable_type)
-                        << std::endl;
-                    if (rs->returned_value->function_name.empty()) {
-                        std::cout << "\t\t\tValue: "
-                                  << rs->returned_value->literal_value
-                                  << std::endl;
-                    } else {
-                        std::cout << "\t\t\tFunction Name: "
-                                  << rs->returned_value->function_name
-                                  << std::endl;
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-
+                handelReturnStatement(rs);
                 break;
             }
 
@@ -216,10 +113,151 @@ public:
                 break;
             }
 
+            case NodeType::IF: {
+                IfStatement *i = dynamic_cast<IfStatement *>(instruction);
+                std::cout << "\t\tIf Statement: " << std::endl;
+                std::cout << "\t\t\tCondition: "
+                          << i->condition->left_operand->literal_value
+                          << std::endl;
+                std::cout << "\t\t\tOperator: "
+                          << operationToString(i->condition->operation)
+                          << std::endl;
+                std::cout << "\t\t\tRight operand: "
+                          << i->condition->right_operand->literal_value
+                          << std::endl;
+                for (const auto &b : i->ifBody->getInstructions()) {
+                    std::cout
+                        << "\t\t\t\tInstruction: " << nodeTypeToString(b->type)
+                        << std::endl;
+                    switch (b->type) {
+                    case NodeType::RETURN_STATEMENT: {
+                        ReturnStatement *rs =
+                            dynamic_cast<ReturnStatement *>(b);
+                        handelReturnStatement(rs);
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+                }
+                break;
+            }
+            case NodeType::ELSE: {
+                ElseStatement *i = dynamic_cast<ElseStatement *>(instruction);
+                for (const auto &b : i->elseBody->getInstructions()) {
+                    std::cout
+                        << "\t\t\t\tInstruction: " << nodeTypeToString(b->type)
+                        << std::endl;
+                    switch (b->type) {
+                    case NodeType::RETURN_STATEMENT: {
+                        ReturnStatement *rs =
+                            dynamic_cast<ReturnStatement *>(b);
+                        handelReturnStatement(rs);
+                        break;
+                    }
+                    default:
+                        break;
+                    }
+                }
+                break;
+            }
+
             default:
                 std::cout << "Unknown" << std::endl;
                 break;
             }
+        }
+    }
+
+    void handelReturnStatement(ReturnStatement *rs) {
+        switch (rs->returned_value->type) {
+        case Expression::Type::LITERAL:
+            std::cout << "\t\tReturned value (LITERAL): "
+                      << rs->returned_value->literal_value << std::endl;
+            break;
+
+        case Expression::Type::VARIABLE:
+            std::cout << "\t\tReturned value (VARIABLE): "
+                      << rs->returned_value->variable_name << std::endl;
+            break;
+
+        case Expression::Type::BINARY_OPERATION:
+            std::cout << "\t\t\tLeft operand: "
+                      << rs->returned_value->left_operand->literal_value
+                      << std::endl;
+            std::cout << "\t\t\tOperator: "
+                      << operationToString(rs->returned_value->operation)
+                      << std::endl;
+            std::cout << "\t\t\tRight operand: "
+                      << rs->returned_value->right_operand->literal_value
+                      << std::endl;
+            break;
+
+        case Expression::Type::FUNCTION_CALL:
+            std::cout << "\t\tReturned value (FUNCTION_CALL): "
+                      << rs->returned_value->function_name << std::endl;
+            for (const auto &arg : rs->returned_value->arguments) {
+                std::cout << "\t\t\tArgument: " << arg->literal_value
+                          << std::endl;
+            }
+            break;
+
+        case Expression::Type::VARIABLE_REFERENCE:
+            if (!rs->returned_value->variable_reference->initialization_value
+                     ->function_name.empty()) {
+                std::cout << "\t\tReturned value (VARIABLE_REFERENCE => "
+                             "FunctionCall): "
+                          << rs->returned_value->variable_reference->name
+                          << std::endl;
+                std::cout << "\t\t\tType: "
+                          << dataTypeToString(
+                                 rs->returned_value->variable_reference
+                                     ->initialization_value->variable_type)
+                          << std::endl;
+                std::cout << "\t\t\tValue: "
+                          << rs->returned_value->variable_reference
+                                 ->initialization_value->function_name
+                          << std::endl;
+                for (const auto &arg : rs->returned_value->variable_reference
+                                           ->initialization_value->arguments) {
+                    std::cout << "\t\t\t\tArgument: \n\t\t\t\tname: \""
+                              << arg->variable_name
+                              << "\" \n\t\t\t\tValue: " << arg->literal_value
+                              << std::endl;
+                }
+                std::cout << "\t\tReturned value (VARIABLE_REFERENCE): "
+                          << rs->returned_value->variable_reference->name
+                          << std::endl;
+                break;
+            } else {
+                std::cout << "\t\tReturned value (VARIABLE_REFERENCE): "
+                          << rs->returned_value->variable_name << std::endl;
+                std::cout << "\t\t\tType: "
+                          << dataTypeToString(
+                                 rs->returned_value->variable_type.category)
+                          << std::endl;
+                std::cout << "\t\t\tValue: "
+                          << rs->returned_value->literal_value << std::endl;
+                break;
+            }
+
+        case Expression::Type::VARIABLE_ASSIGNMENT:
+            std::cout << "\t\tReturned value (VARIABLE_ASSIGNMENT): "
+                      << rs->returned_value->variable_name << std::endl;
+            std::cout << "\t\t\tType: "
+                      << dataTypeToString(rs->returned_value->variable_type)
+                      << std::endl;
+            if (rs->returned_value->function_name.empty()) {
+                std::cout << "\t\t\tValue: "
+                          << rs->returned_value->literal_value << std::endl;
+            } else {
+                std::cout << "\t\t\tFunction Name: "
+                          << rs->returned_value->function_name << std::endl;
+            }
+            break;
+
+        default:
+            break;
         }
     }
 

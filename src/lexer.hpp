@@ -48,6 +48,8 @@ typedef enum TokenType {
     TRUE,
     FALSE,
     TEST,
+    IF,
+    ELSE,
 } TokenType;
 
 typedef struct Token {
@@ -152,6 +154,10 @@ public:
             return "FALSE";
         case TEST:
             return "TEST";
+        case IF:
+            return "IF";
+        case ELSE:
+            return "ELSE";
         }
         return "UNKNOWN";
     }

@@ -112,6 +112,12 @@ void Lexer::tokenalize() {
             } else if (word == "fn") {
                 token->type = FUNCTION;
                 token->value = word;
+            } else if (word == "if") {
+                token->type = IF;
+                token->value = word;
+            } else if (word == "else") {
+                token->type = ELSE;
+                token->value = word;
             } else if (isNumber(word[0])) {
                 bool is_float = false;
                 for (int j = 0; j < word.size(); j++) {

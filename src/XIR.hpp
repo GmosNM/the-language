@@ -1,12 +1,12 @@
-#include "parser.hpp"
 #include "astGen.hpp"
+#include "parser.hpp"
 
 class IR {
 public:
     IR(std::string inputFileName, std::string outputFileName, ASTGen &astGen,
        Parser &parser)
         : inputFileName(inputFileName), outputFileName(outputFileName),
-          astGen(astGen), parser(parser) {
+          astGen(astGen), parser(parser), indentationLevel(0) {
         openInputFile();
         createOutputFile();
     }
@@ -43,6 +43,16 @@ public:
                    0) {
                 fwrite(buffer, 1, bytesRead, outputFile);
             }
+        }
+    }
+
+    void increaseIndentation() { indentationLevel += 1; }
+
+    void decreaseIndentation() { indentationLevel -= 1; }
+
+    void writeTabs() {
+        for (int i = 0; i < indentationLevel; ++i) {
+            writeToFile("\t");
         }
     }
 
@@ -130,18 +140,58 @@ public:
                         operationToString(ret->returned_value->operation) +
                         " " +
                         ret->returned_value->right_operand->literal_value);
-                }
-                if (ret->returned_value->variable_reference != nullptr) {
+                } else if (ret->returned_value->variable_reference != nullptr) {
                     writeToFile("    return " +
                                 ret->returned_value->variable_reference->name);
+                } else {
+                    increaseIndentation();
+                    writeTabs();
+                    writeToFile("return ");
+                    writeToFile(ret->returned_value->literal_value);
                 }
                 writeToFile(";\n");
+                break;
+            }
+            case NodeType::IF: {
+                IfStatement *if_ = dynamic_cast<IfStatement *>(instruction);
+                writeToFile("\tif(");
+                writeToFile(if_->condition->left_operand->literal_value);
+                writeToFile(" ");
+                writeToFile(operationToString(if_->condition->operation));
+                writeToFile(" ");
+                writeToFile(if_->condition->right_operand->literal_value);
+                writeToFile(")");
+                writeToFile("{\n");
+                increaseIndentation();
+                writeTabs();
+                writeIFBody(*if_->ifBody);
+                decreaseIndentation();
+                writeTabs();
+                writeToFile("}\n");
+                decreaseIndentation();
+                break;
+            }
+            case NodeType::ELSE: {
+                ElseStatement *else_ =
+                    dynamic_cast<ElseStatement *>(instruction);
+                writeToFile("\telse");
+                writeToFile("{\n");
+                increaseIndentation();
+                writeIFBody(*else_->elseBody);
+                decreaseIndentation();
+                writeTabs();
+                decreaseIndentation();
+                writeToFile("}\n");
                 break;
             }
             default:
                 break;
             }
         }
+    }
+
+    void writeIFBody(const FunctionBody &body) {
+        writeFunctionBody(body.getInstructions());
     }
 
     void GenIR() {
@@ -170,9 +220,7 @@ public:
 
                 writeToFile(") {\n");
 
-                // Write the function body instruction by instruction
                 writeFunctionBody(func->body->getInstructions());
-
                 writeToFile("}\n");
                 fflush(outputFile);
                 break;
@@ -190,4 +238,5 @@ private:
     FILE *outputFile;
     ASTGen &astGen;
     Parser &parser;
+    int indentationLevel;
 };

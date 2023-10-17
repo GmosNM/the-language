@@ -1,9 +1,11 @@
-int add(int x, int y) {
-    return x + y;
-}
 int main() {
-    int a = 100;
-    int b = 200;
-    int x = add(a, b);
+    int i = 0;
+	if(i == 0){
+	    int x = 200;
     return x;
+}
+	else{
+	return 100;
+}
+return 10;
 }
