@@ -42,6 +42,7 @@ typedef enum TokenType {
     VOID,
     STRING,
     // Keywords
+    PRINTLN_KW,
     RETURN,
     FUNCTION,
     LET,
@@ -158,6 +159,8 @@ public:
             return "IF";
         case ELSE:
             return "ELSE";
+        case PRINTLN_KW:
+            return "PRINTLN";
         }
         return "UNKNOWN";
     }
@@ -202,7 +205,7 @@ protected:
     uint32_t token_index = 0;
     std::vector<std::string> breakers = {"==", "&&", "->", "||", ")", "(", "{",
                                          "}",  "[",  "]",  ",",  ";", ":", ","};
-    std::vector<char> delimiters = {' ', '\t', '\r', '\n'};
+    std::vector<char> delimiters = {'\t', '\r', '\n'};
     std::ifstream file_stream;
 
     bool isBreaker(char c) {
@@ -219,5 +222,26 @@ protected:
                delimiters.end();
     }
 
+    bool isSpace(char c) { return c == ' ' || c == '\t' || c == '\r'; }
+
     bool isNumber(char c) { return c >= '0' && c <= '9'; }
+
+    std::string removeExtraSpaces(const std::string &str) {
+        std::string result = str;
+
+        size_t start = result.find_first_not_of(' ');
+        if (start != std::string::npos) {
+            result = result.substr(start);
+        } else {
+            result.clear();
+        }
+
+        // Remove spaces from the end
+        size_t end = result.find_last_not_of(' ');
+        if (end != std::string::npos) {
+            result = result.substr(0, end + 1);
+        }
+
+        return result;
+    }
 };

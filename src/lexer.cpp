@@ -18,11 +18,11 @@ void Lexer::lex() {
     int col = 1;
 
     while (i < file_content.size()) {
-        while (i < file_content.size() && isDelimiter(file_content[i])) {
+        while (i < file_content.size() && (isDelimiter(file_content[i]) || isSpace(file_content[i]))) {
             if (file_content[i] == '\n') {
                 line++;
                 col = 1;
-            } else {
+            } else if (file_content[i] != ' ') {
                 col++;
             }
             i++;
@@ -37,10 +37,19 @@ void Lexer::lex() {
 
         int word_end = i;
 
-        while (word_end < file_content.size() &&
-            !isDelimiter(file_content[word_end]) &&
-            !isBreaker(file_content[word_end])) {
-            word_end++;
+        if (file_content[i] == '"') {
+            word_end++;  // Include the opening quote.
+            while (word_end < file_content.size() && file_content[word_end] != '"') {
+                word_end++;
+            }
+            word_end++;  // Include the closing quote.
+        } else {
+            while (word_end < file_content.size() &&
+                !isDelimiter(file_content[word_end]) &&
+                !isSpace(file_content[word_end]) &&
+                !isBreaker(file_content[word_end])) {
+                word_end++;
+            }
         }
 
         if (i < word_end) {
@@ -57,6 +66,8 @@ void Lexer::lex() {
         col++;
     }
 }
+
+
 
 bool Lexer::hasNextToken() {
     return token_index + 1 < tokens.size();
@@ -81,10 +92,9 @@ void Lexer::tokenalize() {
             std::unique_ptr<Token> token = std::make_unique<Token>();
             std::string word = words[word_index];
 
-
             if (word == "int") {
                 token->type = INT;
-                token->value = word;
+                token->value =  word;
             } else if (word == "let") {
                 token->type = LET;
                 token->value = word;
@@ -102,6 +112,9 @@ void Lexer::tokenalize() {
                 token->value = word;
             } else if (word == "test") {
                 token->type = TEST;
+                token->value = word;
+            } else if (word == "println") {
+                token->type = PRINTLN_KW;
                 token->value = word;
             } else if (word == "true") {
                 token->type = TRUE;
@@ -137,10 +150,10 @@ void Lexer::tokenalize() {
                 token->value = word;
             } else if (word[0] == '{') {
                 token->type = LBRACE;
-                token->value = word;
+                token->value = "{";
             } else if (word[0] == '}') {
                 token->type = RBRACE;
-                token->value = word;
+                token->value = "}";
             } else if (word[0] == '(') {
                 token->type = LPAREN;
                 token->value = word;
@@ -157,21 +170,22 @@ void Lexer::tokenalize() {
                 token->type = COMMA;
                 token->value = word;
             } else if (word[0] == '"') {
-                std::string content = word.substr(1);
-
-                while (!content.empty() && content.back() != '"') {
-                    word_index++;
-                    if (word_index < words.size()) {
-                        word = words[word_index];
+                std::string content;
+                //TODO: fix the quotes in the strings => remove it and add it in the code generator
+                content = word.substr(1);
+                while (word_index < words.size()) {
+                    word = words[++word_index];
+                    if (word.size() > 1 && word[word.size() - 1] == '"') {
                         content += " " + word;
+                        break;
                     } else {
-                        throw std::runtime_error("Unexpected error: could not "
-                                                 "find the closing quote");
+                        content += word;
                     }
                 }
-                content.pop_back();
+
                 token->type = STRING_LITERAL;
                 token->value = content;
+
             } else if (word[0] == '+') {
                 token->type = PLUS;
                 token->value = word;

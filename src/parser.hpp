@@ -113,6 +113,7 @@ private:
     IfStatement *parseIfStatement();
     Expression *parseCondition();
     FunctionBody *parseBody(FunctionBody *body);
+    PrintNode *parsePrintStatement();
 
     // SymbolTable
 

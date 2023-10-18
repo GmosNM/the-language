@@ -56,6 +56,38 @@ public:
         }
     }
 
+    void writeIncludes() {
+        writeToFile("#include <stdio.h>\n");
+        writeToFile("#include <stdlib.h>\n");
+        writeToFile("#include <string.h>\n");
+        writeToFile("#include <stdarg.h>\n");
+        writeToFile("#include <stdbool.h>\n");
+        writeToFile("\n\n");
+
+        const char *printlnfunction =
+            "void println(const char *format, ...) {\n"
+            "    va_list args;\n"
+            "    va_start(args, format);\n"
+            "\n"
+            "    for (int i = 0; format[i] != '\\0'; i++) {\n"
+            "        if (format[i] == '{' && format[i + 1] == '}') {\n"
+            "            i += 1;\n"
+            "            const char *arg = va_arg(args, const char *);\n"
+            "            printf(\"%s\", arg);\n"
+            "        } else {\n"
+            "            putchar(format[i]);\n"
+            "        }\n"
+            "    }\n"
+            "\n"
+            "    va_end(args);\n"
+            "    printf(\"\\n\");\n"
+            "}\n";
+
+        writeToFile(printlnfunction);
+
+        writeToFile("\n\n");
+    }
+
     void writeToFile(const std::string &str) {
         if (outputFile) {
             fwrite(str.c_str(), sizeof(char), str.size(), outputFile);
@@ -184,6 +216,26 @@ public:
                 writeToFile("}\n");
                 break;
             }
+            case NodeType::PRINT_NODE: {
+                PrintNode *printNode = dynamic_cast<PrintNode *>(instruction);
+                increaseIndentation();
+                writeTabs();
+                writeToFile("println(");
+
+                for (size_t i = 0; i < printNode->arguments.size(); ++i) {
+                    if (i > 0) {
+                        writeToFile(", ");
+                    }
+
+                    writeToFile("\"");
+                    writeToFile(printNode->arguments[i]);
+                }
+
+                writeToFile(");\n");
+                decreaseIndentation();
+                break;
+            }
+
             default:
                 break;
             }
@@ -199,6 +251,8 @@ public:
             std::cerr << "AST is empty" << std::endl;
             return;
         }
+
+        writeIncludes();
 
         for (auto &node : astGen.nodes) {
             switch (node->type) {

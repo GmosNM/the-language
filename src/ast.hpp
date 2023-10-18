@@ -23,6 +23,7 @@ enum class NodeType {
     FUNCTION_DECLARATION,
     FUNCTION_BODY,
     FUNCTION_CALL,
+    PRINT_NODE,
     // Statements
     RETURN_STATEMENT,
     // expressions
@@ -56,7 +57,8 @@ struct Expression : public Instruction {
         FUNCTION_CALL,
         VARIABLE_REFERENCE,
         VARIABLE_ASSIGNMENT,
-        EQUAL_OPERATION
+        EQUAL_OPERATION,
+        PRINT
     };
 
     Type type;
@@ -100,6 +102,11 @@ struct Expression : public Instruction {
     Expression(Expression *left, Expression *right)
         : Instruction(NodeType::EXPRESSION), type(Type::EQUAL_OPERATION),
           left_operand(left), right_operand(right) {}
+
+    // Print node
+    Expression(const std::string &functionName_, std::vector<Expression *> args)
+        : Instruction(NodeType::EXPRESSION), type(Type::PRINT),
+          function_name(functionName_), arguments(args) {}
 
     std::string literal_value;
     std::string variable_name;
@@ -216,4 +223,15 @@ struct ElseStatement : public Instruction {
 
     ElseStatement(FunctionBody *elseBody, FunctionBody *ifBody)
         : Instruction(NodeType::ELSE), elseBody(elseBody), ifBody(ifBody) {}
+};
+
+struct PrintNode : public Instruction {
+    std::string function_name;
+    std::vector<Expression *> arguments2;
+    std::vector<std::string> arguments;
+
+    PrintNode(const std::string &name, const std::vector<std::string> args,
+              const std::vector<Expression *> &args2)
+        : Instruction(NodeType::PRINT_NODE), function_name(name),
+          arguments(args), arguments2(args2) {}
 };

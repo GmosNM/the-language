@@ -3,6 +3,8 @@
 /bld
 
 
+
+*.exe
 # ignore editor files
 .idea
 .project

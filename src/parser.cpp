@@ -183,6 +183,9 @@ FunctionBody* Parser::parseBody(FunctionBody* body) {
             consume(RBRACE);
             ElseStatement* elseStatement = new ElseStatement(elseBody, body);
             body->addInstruction(elseStatement);
+        } else if (getCurrentToken().type == PRINTLN_KW) {
+            auto print = parsePrintStatement();
+            body->addInstruction(print);
         } else if (getCurrentToken().type == IDENTIFIER) {
             if (getNextToken().type == EQUAL) {
                 auto var = parseVariableAssignment();
@@ -335,6 +338,7 @@ Expression* Parser::parseExpression() {
         Expression* right = parseTerm();
         expression = new Expression(getOperationType(op.type), expression, right);
     }
+
 
     return expression;
 }
@@ -489,3 +493,44 @@ IfStatement* Parser::parseIfStatement() {
 
     return new IfStatement(condition, ifBody, elseBody);
 }
+
+
+PrintNode* Parser::parsePrintStatement() {
+    PrintNode *printNode = nullptr;
+    expect(PRINTLN_KW);
+    std::string functionName = getCurrentToken().value;
+    consume(PRINTLN_KW);
+
+    expect(LPAREN);
+    consume(LPAREN);
+
+    std::vector<std::string> stringArgs;
+    std::vector<Expression*> expressionArgs;
+
+    while (getCurrentToken().type != RPAREN) {
+        if (!stringArgs.empty()) {
+            expect(COMMA);
+            consume(COMMA);
+        }
+
+        if (match(STRING_LITERAL)) {
+            std::string argValue = getCurrentToken().value;
+            consume(STRING_LITERAL);
+            stringArgs.push_back(argValue);
+            expressionArgs.push_back(new Expression(argValue, DataType(DataType::Category::STRING)));
+        } else {
+            Expression* arg = parseExpression();
+            expressionArgs.push_back(arg);
+        }
+    }
+
+    expect(RPAREN);
+    consume(RPAREN);
+
+    expect(SEMICOLON);
+    consume(SEMICOLON);
+
+    printNode = new PrintNode(functionName, stringArgs, expressionArgs);
+    return printNode;
+}
+

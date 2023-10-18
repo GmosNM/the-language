@@ -36,7 +36,7 @@ public:
             case NodeType::FUNCTION_DECLARATION: {
                 FunctionDeclaration *f =
                     dynamic_cast<FunctionDeclaration *>(node);
-                HandelFunctionDelc(f);
+                HandleFunctionDeclaration(f);
                 break;
             }
             case NodeType::FUNCTION_CALL:
@@ -51,7 +51,7 @@ public:
         }
     }
 
-    void HandelFunctionDelc(FunctionDeclaration *f) {
+    void HandleFunctionDeclaration(FunctionDeclaration *f) {
         std::cout << "FunctionDeclaration" << std::endl;
         std::cout << "    Name: " << f->name << std::endl;
         std::cout << "    Return type: " << dataTypeToString(f->return_type)
@@ -63,7 +63,11 @@ public:
                       << std::endl;
         }
 
-        for (auto instruction : f->body->getInstructions()) {
+        processInstructions(f->body->getInstructions());
+    }
+
+    void processInstructions(const std::vector<Instruction *> &instructions) {
+        for (auto instruction : instructions) {
             std::cout << "\tInstruction: "
                       << nodeTypeToString(instruction->type) << std::endl;
 
@@ -93,9 +97,9 @@ public:
                               << std::endl;
                 }
                 for (const auto &arg : v->initialization_value->arguments) {
-                    std::cout << "\t\t\tArgument: \n\t\t\tname: \""
+                    std::cout << "\t\t\tArgument:\n\t\t\tname: \""
                               << arg->variable_name
-                              << "\" \n\t\t\tValue: " << arg->literal_value
+                              << "\"\n\t\t\tValue: " << arg->literal_value
                               << std::endl;
                 }
                 break;
@@ -115,7 +119,7 @@ public:
 
             case NodeType::IF: {
                 IfStatement *i = dynamic_cast<IfStatement *>(instruction);
-                std::cout << "\t\tIf Statement: " << std::endl;
+                std::cout << "\t\tIf Statement:" << std::endl;
                 std::cout << "\t\t\tCondition: "
                           << i->condition->left_operand->literal_value
                           << std::endl;
@@ -125,41 +129,67 @@ public:
                 std::cout << "\t\t\tRight operand: "
                           << i->condition->right_operand->literal_value
                           << std::endl;
-                for (const auto &b : i->ifBody->getInstructions()) {
-                    std::cout
-                        << "\t\t\t\tInstruction: " << nodeTypeToString(b->type)
-                        << std::endl;
-                    switch (b->type) {
-                    case NodeType::RETURN_STATEMENT: {
-                        ReturnStatement *rs =
-                            dynamic_cast<ReturnStatement *>(b);
-                        handelReturnStatement(rs);
-                        break;
+                processInstructions(i->ifBody->getInstructions());
+                break;
+            }
+
+            case NodeType::ELSE: {
+                ElseStatement *i = dynamic_cast<ElseStatement *>(instruction);
+                processInstructions(i->elseBody->getInstructions());
+                break;
+            }
+
+            case NodeType::PRINT_NODE: {
+                PrintNode *printNode = dynamic_cast<PrintNode *>(instruction);
+                std::cout << "\tPrint Statement: " << printNode->function_name
+                          << " (Built-in)" << std::endl;
+
+                if (!printNode->arguments.empty()) {
+                    std::cout << "\t\tArguments:" << std::endl;
+                    for (const auto &arg : printNode->arguments) {
+                        std::cout << "\t\t\t" << arg << std::endl;
                     }
-                    default:
-                        break;
-                    }
+                } else {
+                    std::cout << "\t\tNo arguments" << std::endl;
                 }
                 break;
             }
-            case NodeType::ELSE: {
-                ElseStatement *i = dynamic_cast<ElseStatement *>(instruction);
-                for (const auto &b : i->elseBody->getInstructions()) {
+
+            case NodeType::EXPRESSION: {
+                Expression *e = dynamic_cast<Expression *>(instruction);
+                switch (e->type) {
+                case Expression::Type::LITERAL:
+                    std::cout << "\t\tLiteral: " << e->literal_value
+                              << std::endl;
+                    break;
+                case Expression::Type::VARIABLE:
+                    std::cout << "\t\tVariable: " << e->variable_name
+                              << std::endl;
+                    break;
+                case Expression::Type::BINARY_OPERATION:
+                    std::cout << "\t\t\tLeft operand: "
+                              << e->left_operand->literal_value << std::endl;
                     std::cout
-                        << "\t\t\t\tInstruction: " << nodeTypeToString(b->type)
+                        << "\t\t\tOperator: " << operationToString(e->operation)
                         << std::endl;
-                    switch (b->type) {
-                    case NodeType::RETURN_STATEMENT: {
-                        ReturnStatement *rs =
-                            dynamic_cast<ReturnStatement *>(b);
-                        handelReturnStatement(rs);
-                        break;
+                    std::cout << "\t\t\tRight operand: "
+                              << e->right_operand->literal_value << std::endl;
+                    break;
+                case Expression::Type::FUNCTION_CALL:
+                    std::cout << "\t\tFunction Call: " << e->function_name
+                              << std::endl;
+                    for (const auto &arg : e->arguments) {
+                        std::cout << "\t\t\t" << arg->literal_value
+                                  << std::endl;
                     }
-                    default:
-                        break;
-                    }
+                    break;
+                case Expression::Type::PRINT:
+                    std::cout << "\t\tPrint: " << e->function_name << std::endl;
+                    break;
+                default:
+                    std::cout << "Unknown" << std::endl;
+                    break;
                 }
-                break;
             }
 
             default:

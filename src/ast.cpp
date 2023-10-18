@@ -22,6 +22,8 @@ std::string nodeTypeToString(NodeType type) {
         return "IfStatement";
     case NodeType::ELSE:
         return "ElseStatement";
+    case NodeType::PRINT_NODE:
+        return "Print";
     default:
         return "Unknown";
     }
