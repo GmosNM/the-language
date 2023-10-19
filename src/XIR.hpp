@@ -229,6 +229,7 @@ public:
 
                     writeToFile("\"");
                     writeToFile(printNode->arguments[i]);
+                    writeToFile("\"");
                 }
 
                 writeToFile(");\n");

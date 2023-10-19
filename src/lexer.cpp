@@ -37,17 +37,19 @@ void Lexer::lex() {
 
         int word_end = i;
 
-        if (file_content[i] == '"') {
-            word_end++;  // Include the opening quote.
+        if (file_content[word_end] == '"') {
+            word_end++;  // Include the starting double quote in the token.
             while (word_end < file_content.size() && file_content[word_end] != '"') {
                 word_end++;
             }
-            word_end++;  // Include the closing quote.
+            if (word_end < file_content.size() && file_content[word_end] == '"') {
+                word_end++;  // Include the closing double quote in the token.
+            }
         } else {
             while (word_end < file_content.size() &&
-                !isDelimiter(file_content[word_end]) &&
-                !isSpace(file_content[word_end]) &&
-                !isBreaker(file_content[word_end])) {
+                   !isDelimiter(file_content[word_end]) &&
+                   !isSpace(file_content[word_end]) &&
+                   !isBreaker(file_content[word_end])) {
                 word_end++;
             }
         }
@@ -66,6 +68,7 @@ void Lexer::lex() {
         col++;
     }
 }
+
 
 
 
@@ -171,21 +174,13 @@ void Lexer::tokenalize() {
                 token->value = word;
             } else if (word[0] == '"') {
                 std::string content;
-                //TODO: fix the quotes in the strings => remove it and add it in the code generator
-                content = word.substr(1);
-                while (word_index < words.size()) {
-                    word = words[++word_index];
-                    if (word.size() > 1 && word[word.size() - 1] == '"') {
-                        content += " " + word;
-                        break;
-                    } else {
-                        content += word;
+                for (int j = 0; j < word.size(); j++) {
+                    if (word[j] != '"') {
+                        content += word[j];
                     }
                 }
-
                 token->type = STRING_LITERAL;
                 token->value = content;
-
             } else if (word[0] == '+') {
                 token->type = PLUS;
                 token->value = word;
