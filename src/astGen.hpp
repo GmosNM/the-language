@@ -147,10 +147,45 @@ public:
                 if (!printNode->arguments.empty()) {
                     std::cout << "\t\tArguments:" << std::endl;
                     for (const auto &arg : printNode->arguments) {
-                        std::cout << "\t\t\t" << arg << std::endl;
+                        if (!arg.empty())
+                            std::cout << "\t\t\t" << arg << std::endl;
                     }
                 } else {
                     std::cout << "\t\tNo arguments" << std::endl;
+                }
+
+                for (const auto &arg : printNode->arguments2) {
+                    switch (arg->type) {
+                    case Expression::Type::LITERAL:
+                        std::cout << "\t\tLiteral: " << arg->literal_value
+                                  << std::endl;
+                        break;
+                    case Expression::Type::VARIABLE:
+                        std::cout << "\t\tVariable: " << arg->variable_name
+                                  << std::endl;
+                        break;
+                    case Expression::Type::BINARY_OPERATION:
+                        std::cout << "\t\t\tLeft operand: "
+                                  << arg->left_operand->literal_value
+                                  << std::endl;
+                        std::cout << "\t\t\tOperator: "
+                                  << operationToString(arg->operation)
+                                  << std::endl;
+                        std::cout << "\t\t\tRight operand: "
+                                  << arg->right_operand->literal_value
+                                  << std::endl;
+                        break;
+                    case Expression::Type::FUNCTION_CALL:
+                        std::cout << "\t\tFunction Call: " << arg->function_name
+                                  << std::endl;
+                        for (const auto &arg2 : arg->arguments) {
+                            std::cout << "\t\t\t" << arg2->literal_value
+                                      << std::endl;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 break;
             }

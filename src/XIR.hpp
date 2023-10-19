@@ -70,10 +70,27 @@ public:
             "    va_start(args, format);\n"
             "\n"
             "    for (int i = 0; format[i] != '\\0'; i++) {\n"
-            "        if (format[i] == '{' && format[i + 1] == '}') {\n"
-            "            i += 1;\n"
-            "            const char *arg = va_arg(args, const char *);\n"
-            "            printf(\"%s\", arg);\n"
+            "        if (format[i] == '{' && format[i + 2] == ':' && format[i "
+            "+ 3] == '}') {\n"
+            "            char spec = format[i + 1];\n"
+            "\n"
+            "            if (spec == 'd' || spec == 'i') {\n"
+            "                int arg = va_arg(args, int);\n"
+            "                printf(\"%d\", arg);\n"
+            "            } else if (spec == 'f') {\n"
+            "                double arg = va_arg(args, double);\n"
+            "                printf(\"%f\", arg);\n"
+            "            } else if (spec == 'c') {\n"
+            "                int arg = va_arg(args, int);\n"
+            "                putchar(arg);\n"
+            "            } else if (spec == 's') {\n"
+            "                const char *arg = va_arg(args, const char *);\n"
+            "                printf(\"%s\", arg);\n"
+            "            } else if (spec == 'b') {\n"
+            "                bool arg = va_arg(args, int);\n"
+            "                printf(\"%s\", arg ? \"true\" : \"false\");\n"
+            "            }\n"
+            "            i += 3;\n"
             "        } else {\n"
             "            putchar(format[i]);\n"
             "        }\n"
@@ -222,14 +239,39 @@ public:
                 writeTabs();
                 writeToFile("println(");
 
+                size_t varIndex = 0;
+
                 for (size_t i = 0; i < printNode->arguments.size(); ++i) {
                     if (i > 0) {
                         writeToFile(", ");
                     }
 
+                    std::string argument = printNode->arguments[i];
+                    size_t found = argument.find("{}");
+
+                    while (found != std::string::npos) {
+                        std::string typeSpecifier = DataTypeToStringFormat(
+                            printNode->arguments2[varIndex]->variable_type);
+                        std::string variableName =
+                            printNode->arguments2[varIndex]->variable_name;
+
+                        argument.replace(found, 2, "{" + typeSpecifier + "}");
+
+                        found =
+                            argument.find("{}", found + typeSpecifier.length() +
+                                                    variableName.length());
+                        varIndex++;
+                    }
                     writeToFile("\"");
-                    writeToFile(printNode->arguments[i]);
+                    writeToFile(argument);
                     writeToFile("\"");
+                }
+
+                for (size_t i = 0; i < printNode->arguments2.size(); ++i) {
+                    if (i > 0 || !printNode->arguments.empty()) {
+                        writeToFile(", ");
+                    }
+                    writeToFile(printNode->arguments2[i]->variable_name);
                 }
 
                 writeToFile(");\n");
@@ -283,6 +325,23 @@ public:
             default:
                 break;
             }
+        }
+    }
+
+    std::string DataTypeToStringFormat(DataType type) {
+        switch (type.category) {
+        case DataType::Category::INT:
+            return "i:";
+        case DataType::Category::FLOAT:
+            return "f:";
+        case DataType::Category::BOOL:
+            return "b:";
+        case DataType::Category::CHAR:
+            return "c:";
+        case DataType::Category::STRING:
+            return "s:";
+        default:
+            return "Unknown";
         }
     }
 

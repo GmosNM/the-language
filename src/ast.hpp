@@ -108,6 +108,12 @@ struct Expression : public Instruction {
         : Instruction(NodeType::EXPRESSION), type(Type::PRINT),
           function_name(functionName_), arguments(args) {}
 
+    // bool expression
+    Expression(bool value)
+        : Instruction(NodeType::EXPRESSION), type(Type::LITERAL),
+          literal_value(value ? "true" : "false"),
+          variable_type(DataType::Category::BOOL) {}
+
     std::string literal_value;
     std::string variable_name;
     DataType variable_type;

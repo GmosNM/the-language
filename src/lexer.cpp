@@ -18,7 +18,8 @@ void Lexer::lex() {
     int col = 1;
 
     while (i < file_content.size()) {
-        while (i < file_content.size() && (isDelimiter(file_content[i]) || isSpace(file_content[i]))) {
+        while (i < file_content.size() &&
+               (isDelimiter(file_content[i]) || isSpace(file_content[i]))) {
             if (file_content[i] == '\n') {
                 line++;
                 col = 1;
@@ -38,12 +39,14 @@ void Lexer::lex() {
         int word_end = i;
 
         if (file_content[word_end] == '"') {
-            word_end++;  // Include the starting double quote in the token.
-            while (word_end < file_content.size() && file_content[word_end] != '"') {
+            word_end++;
+            while (word_end < file_content.size() &&
+                   file_content[word_end] != '"') {
                 word_end++;
             }
-            if (word_end < file_content.size() && file_content[word_end] == '"') {
-                word_end++;  // Include the closing double quote in the token.
+            if (word_end < file_content.size() &&
+                file_content[word_end] == '"') {
+                word_end++;
             }
         } else {
             while (word_end < file_content.size() &&
@@ -69,20 +72,11 @@ void Lexer::lex() {
     }
 }
 
+bool Lexer::hasNextToken() { return token_index + 1 < tokens.size(); }
 
+Token Lexer::getNextToken() { return *tokens[token_index++]; }
 
-
-bool Lexer::hasNextToken() {
-    return token_index + 1 < tokens.size();
-}
-
-Token Lexer::getNextToken() {
-    return *tokens[token_index++];
-}
-
-Token Lexer::peekNextToken() {
-    return *tokens[token_index];
-}
+Token Lexer::peekNextToken() { return *tokens[token_index]; }
 
 void Lexer::nextToken() {
     if (hasNextToken()) {
@@ -97,7 +91,7 @@ void Lexer::tokenalize() {
 
             if (word == "int") {
                 token->type = INT;
-                token->value =  word;
+                token->value = word;
             } else if (word == "let") {
                 token->type = LET;
                 token->value = word;

@@ -10,10 +10,26 @@ void println(const char *format, ...) {
     va_start(args, format);
 
     for (int i = 0; format[i] != '\0'; i++) {
-        if (format[i] == '{' && format[i + 1] == '}') {
-            i += 1;
-            const char *arg = va_arg(args, const char *);
-            printf("%s", arg);
+        if (format[i] == '{' && format[i + 2] == ':' && format[i + 3] == '}') {
+            char spec = format[i + 1];
+
+            if (spec == 'd' || spec == 'i') {
+                int arg = va_arg(args, int);
+                printf("%d", arg);
+            } else if (spec == 'f') {
+                double arg = va_arg(args, double);
+                printf("%f", arg);
+            } else if (spec == 'c') {
+                int arg = va_arg(args, int);
+                putchar(arg);
+            } else if (spec == 's') {
+                const char *arg = va_arg(args, const char *);
+                printf("%s", arg);
+            } else if (spec == 'b') {
+                bool arg = va_arg(args, int);
+                printf("%s", arg ? "true" : "false");
+            }
+            i += 3;
         } else {
             putchar(format[i]);
         }
@@ -25,15 +41,8 @@ void println(const char *format, ...) {
 
 
 int main() {
-    int x = 10;
-	if(x == 10){
-			println("x is {} ", "10");
-		println("100%", "");
-    return x;
-}
-	else{
-	println("x is {}", "not 10");
-	return 404;
-}
-return 0;
+    char* m = "max";
+    char* x = "john";
+    char* a = "ali";
+	println("hello {s:} and {s:} and {s:}", "max", "john", "ali");
 }
