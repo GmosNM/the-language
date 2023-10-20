@@ -14,12 +14,12 @@ public:
 
     void printAST() {
         std::cout << "AST:" << std::endl;
-        for (auto node : nodes) {
-            switch (node->type) {
+        for (int i = 0; i < nodes.size(); ++i) {
+            switch (nodes[i]->type) {
             case NodeType::VARIABLE_DECLARATION: {
                 std::cout << "VariableDeclaration" << std::endl;
                 VariableDeclaration *v =
-                    dynamic_cast<VariableDeclaration *>(node);
+                    dynamic_cast<VariableDeclaration *>(nodes[i]);
                 std::cout << "    Name: " << v->name << std::endl;
                 std::cout << "    Type: " << dataTypeToString(v->variable_type)
                           << std::endl;
@@ -35,7 +35,7 @@ public:
                 break;
             case NodeType::FUNCTION_DECLARATION: {
                 FunctionDeclaration *f =
-                    dynamic_cast<FunctionDeclaration *>(node);
+                    dynamic_cast<FunctionDeclaration *>(nodes[i]);
                 HandleFunctionDeclaration(f);
                 break;
             }
@@ -107,13 +107,7 @@ public:
             case NodeType::VARIABLE_ASSIGNMENT: {
                 VariableAssignment *v =
                     dynamic_cast<VariableAssignment *>(instruction);
-                std::cout << "\t\tVariable Assignment: " << v->name
-                          << std::endl;
-                if (v->new_value) {
-                    std::cout
-                        << "\t\tNew value: " << v->new_value->literal_value
-                        << std::endl;
-                }
+                HandleVariableAssignment(v);
                 break;
             }
 
@@ -232,6 +226,17 @@ public:
                 break;
             }
         }
+    }
+
+    void HandleVariableAssignment(VariableAssignment *v) {
+        std::cout << "\t\tVariable Assignment: " << v->variable->name
+                  << std::endl;
+        std::cout << "\t\tOld value: "
+                  << v->variable->initialization_value->literal_value
+                  << std::endl;
+
+        std::cout << "\t\tNew value: " << v->newValue->literal_value
+                  << std::endl;
     }
 
     void handelReturnStatement(ReturnStatement *rs) {

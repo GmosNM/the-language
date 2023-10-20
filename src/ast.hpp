@@ -116,6 +116,7 @@ struct Expression : public Instruction {
 
     std::string literal_value;
     std::string variable_name;
+    std::string old_value;
     DataType variable_type;
     Operation operation;
     std::unique_ptr<Expression> left_operand;
@@ -129,10 +130,14 @@ struct VariableDeclaration : public Instruction {
     std::string name;
     DataType variable_type;
     Expression *initialization_value;
+    Expression *oldValue;
+    Expression *newValue;
+    bool valueChanged;
 
     VariableDeclaration(const std::string &n, DataType type, Expression *init)
         : Instruction(NodeType::VARIABLE_DECLARATION), name(n),
-          variable_type(type), initialization_value(init) {}
+          variable_type(type), initialization_value(init), oldValue(nullptr),
+          newValue(nullptr), valueChanged(false) {}
 };
 
 struct VariableReference : public Instruction {
@@ -201,13 +206,14 @@ protected:
 };
 
 struct VariableAssignment : public Instruction {
-    std::string name;
-    Expression *new_value;
-    DataType variable_type;
+    VariableDeclaration *variable;
+    Expression *oldValue;
+    Expression *newValue;
 
-    VariableAssignment(const std::string &n, Expression *v, DataType type)
-        : Instruction(NodeType::VARIABLE_ASSIGNMENT), name(n), new_value(v),
-          variable_type(type) {}
+    VariableAssignment(VariableDeclaration *var, Expression *oldVal,
+                       Expression *newVal)
+        : Instruction(NodeType::VARIABLE_ASSIGNMENT), variable(var),
+          oldValue(oldVal), newValue(newVal) {}
 };
 
 struct IfStatement : public Instruction {

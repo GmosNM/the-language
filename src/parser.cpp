@@ -478,14 +478,13 @@ VariableAssignment *Parser::parseVariableAssignment() {
     expect(SEMICOLON);
     consume(SEMICOLON);
 
-    VariableDeclaration *var =
-        globalSymbolTable->parentScope->GetVariable(name);
+    auto *var = globalSymbolTable->parentScope->GetVariable(name);
 
     if (var) {
-        globalSymbolTable->parentScope->setNewVariableValue(
-            name, assignmentValue->literal_value);
-        return new VariableAssignment(name, assignmentValue,
-                                      var->initialization_value->variable_type);
+        Expression *oldValue = var->initialization_value;
+        globalSymbolTable->parentScope->setNewVariableValue(name,
+                                                            assignmentValue);
+        return new VariableAssignment(var, oldValue, assignmentValue);
     } else {
         std::cerr << "Variable not found: " << name << std::endl;
         return nullptr;

@@ -1,5 +1,7 @@
 
-
+fn add(a: int, b: int): int{
+    return a + b;
+}
 
 fn main(): int{
     let m: string = "max";

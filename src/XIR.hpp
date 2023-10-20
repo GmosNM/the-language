@@ -4,7 +4,7 @@
 class IR {
 public:
     IR(std::string inputFileName, std::string outputFileName, ASTGen &astGen,
-       Parser &parser)
+       Parser *parser)
         : inputFileName(inputFileName), outputFileName(outputFileName),
           astGen(astGen), parser(parser), indentationLevel(0) {
         openInputFile();
@@ -154,15 +154,15 @@ public:
             case NodeType::VARIABLE_ASSIGNMENT: {
                 VariableAssignment *assign =
                     dynamic_cast<VariableAssignment *>(instruction);
-                switch (assign->new_value->type) {
+                switch (assign->newValue->type) {
                 case Expression::Type::VARIABLE_REFERENCE:
-                    writeToFile("    " + assign->name + " = ");
-                    writeToFile(assign->new_value->variable_name);
+                    writeToFile("    " + assign->variable->name + " = ");
+                    writeToFile(assign->newValue->variable_name);
                     writeToFile(";\n");
                     break;
                 default:
-                    writeToFile("    " + assign->name + " = ");
-                    writeToFile(assign->new_value->literal_value);
+                    writeToFile("    " + assign->variable->name + " = ");
+                    writeToFile(assign->newValue->literal_value);
                 };
                 writeToFile(";\n");
                 break;
@@ -182,21 +182,21 @@ public:
             case NodeType::RETURN_STATEMENT: {
                 ReturnStatement *ret =
                     dynamic_cast<ReturnStatement *>(instruction);
-                if (ret->returned_value->left_operand != nullptr) {
-                    writeToFile(
-                        "    return " +
-                        ret->returned_value->left_operand->variable_name + " " +
-                        operationToString(ret->returned_value->operation) +
-                        " " +
-                        ret->returned_value->right_operand->literal_value);
-                } else if (ret->returned_value->variable_reference != nullptr) {
-                    writeToFile("    return " +
-                                ret->returned_value->variable_reference->name);
+                auto table = parser->globalSymbolTable;
+                auto &left = ret->returned_value->left_operand;
+                auto &right = ret->returned_value->right_operand;
+                writeToFile("    return ");
+                if (left->literal_value.empty()) {
+                    writeToFile(ret->returned_value->variable_name);
                 } else {
-                    increaseIndentation();
-                    writeTabs();
-                    writeToFile("return ");
-                    writeToFile(ret->returned_value->literal_value);
+                    writeToFile(left->literal_value + " ");
+                }
+                writeToFile(operationToString(ret->returned_value->operation) +
+                            " ");
+                if (right->old_value.empty()) {
+                    writeToFile(right->variable_name);
+                } else {
+                    writeToFile(right->old_value);
                 }
                 writeToFile(";\n");
                 break;
@@ -351,6 +351,6 @@ private:
     FILE *inputFile;
     FILE *outputFile;
     ASTGen &astGen;
-    Parser &parser;
+    Parser *parser;
     int indentationLevel;
 };

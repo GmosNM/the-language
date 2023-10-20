@@ -68,11 +68,12 @@ struct SymbolTable {
         return false;
     }
 
-    void setNewVariableValue(const std::string &name,
-                             const std::string &newValue) {
+    void setNewVariableValue(const std::string &name, Expression *newValue) {
         if (hasVariable(name)) {
-            VariableDeclaration *variable = GetVariable(name);
-            variable->initialization_value->literal_value = newValue;
+            VariableDeclaration *var = variables[name];
+            var->valueChanged = true;
+            var->oldValue = var->initialization_value;
+            var->newValue = newValue;
         }
     }
 

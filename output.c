@@ -41,8 +41,7 @@ void println(const char *format, ...) {
 
 
 int main() {
-    char* m = "max";
-    char* x = "john";
-    char* a = "ali";
-	println("hello {s:} and {s:} and {s:}", "max", "john", "ali");
+    int a = 100;
+    a = 200;
+    return 1 + a;
 }
